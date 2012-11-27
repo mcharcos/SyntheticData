@@ -1,0 +1,65 @@
+; In this script we create a synthetic image to be used by the drip data processing tool
+; The synthetic image does not contain the following features:
+;        - flat field
+;        - dark
+;
+; The point source has a flux of 60000Me/s and it is situated at x=100 and y=110 in the first image.
+; The conversion factor from ADU to Me/s was calculated from the information in the header of the
+; fits image bFT055_0308_undistorted.fits. 
+;
+; The image bFT055_0308_undistorted.fits shall be at resources under the same directory as this script in order
+; to run correctly. This fits file is used by the synthetic package to initialize the instrument, filter, observation mode,
+; skyangle and conversion factor.
+;
+; PSF= default (6.)
+;
+; The background is about 60000 Me/s. 
+; 
+; We consider linearity correction in the order of 0.9 and conversion factor is 508.626*136*1e-6
+; 
+; The geometrical distortion is introduced using the pinhole positions pinhole_locs.txt which is assumed
+; to be situated in the ../lib/ directory
+;
+; A bad pixel mask is used which is assumed to be located in the ../lib/ directory
+; 
+; The routines are assumed to be at ../src/ directory
+; 
+; The ouput is saved under examples/outputs/
+;
+; HOW TO RUN:
+; ===========
+;       + Open an idl session
+;       + Call: @drip_p60000_b60000_C2N_ang0_dist_nodark_noflat_bpix_ffits_x100_y110
+
+.reset
+.compile ../lib/drip_getpar.pro
+.compile ../lib/drip_message.pro
+.compile ../lib/drip_imgnonlin.pro
+.compile ../lib/drip_undistort.pro
+.compile ../lib/distcorr_model.pro
+.compile ../lib/classdef.pro
+.compile ../src/synthetic.pro
+.compile ../src/syntheticimg.pro
+.compile ../src/synforcast.pro
+
+
+; Define the inputs for creating the new "SYNTHETIC" object 
+pathdata = '../data/'
+fflat = ''
+fdark = ''
+fbadpix = pathdata+'lwc_badpix.fits'
+fdistortion = pathdata+'pinhole_locs.txt'
+ffits = 'resources/bFT055_0308_undistorted.fits'
+conversion = 508.626*136*1e-6
+linearity = 0.9
+
+; Define the output file name
+fout = 'outputs/drip_p100_b7000_C2N_ang0_dist_nodark_noflat_bpix_ffits_x100_y110.fits'
+
+; Create "synthetic" object and add source to the object
+syntheticimg = obj_new('SYNFORCAST',background=60000.*linearity*conversion,obsmode='C2N',/debug, skyangle=0., $
+                                 ffits=ffits,fflat=fflat,fdark=fdark,fdistortion=fdistortion)
+syntheticimg->AddSource,flux=60000.*linearity*conversion,x=100,y=110
+
+; Create and save the output synthetic image. Then visualize it.
+im=syntheticimg->CreateImage(fname=fout)

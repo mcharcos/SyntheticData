@@ -42,7 +42,7 @@ FUNCTION synforcast::CreateImage, fname=fname  ;, header=header
   xnod = -self.nodamp*sin(self.nodang)
   ynod = -self.nodamp*cos(self.nodang)
   self->Message,'Chop Amplitude: '+strtrim(self.chopamp,2)+' pixels, Nod Amplitude: '+strtrim(self.nodamp,2)+' pixels',priority='DEBUG',method='CreateImage'
-  self->Message,'Chop Angle: '+strtrim(self.chopang*180./!pi,2)+' degrees, Nod Angle: '+strtrim(self.nodang*180./!pi,2)+' degrees',priority='DEBUG',method='CreateImage'
+  self->Message,'Chop Angle: '+strtrim(self.chopang*180./!pi,2 )+' degrees, Nod Angle: '+strtrim(self.nodang*180./!pi,2 )+' degrees',priority='DEBUG',method='CreateImage'
   
   ; Change x and y of the chop and nod shifts according to the coordinate system
   if (self.chopsys eq 2) then begin
@@ -62,16 +62,16 @@ FUNCTION synforcast::CreateImage, fname=fname  ;, header=header
   
   ; Create first plane 
   self->Message,'Creating plane 1, shift=[0,0]',priority='DEBUG',method='CreateImage'
-  plane1 = self->synthetic::CreateImage()
+  plane1 = self->synthetic::CreateImage(/dopsf)
   ; Create second plane (choped image)
   self->Message,'Creating plane 2, shift=['+strtrim(xchop,2)+','+strtrim(ychop,2)+']',priority='DEBUG',method='CreateImage'
-  plane2 = self->synthetic::CreateImage(shiftsource=[xchop,ychop])
+  plane2 = self->synthetic::CreateImage(shiftsource=[xchop,ychop],/dopsf)
   ; Create second plane (nodded image)
   self->Message,'Creating plane 3, shift=['+strtrim(xnod,2)+','+strtrim(ynod,2)+']',priority='DEBUG',method='CreateImage'
-  plane3 = self->synthetic::CreateImage(shiftsource=[xnod,ynod])
+  plane3 = self->synthetic::CreateImage(shiftsource=[xnod,ynod],/dopsf)
   ; Create second plane (choped+nodded image)
   self->Message,'Creating plane 4, shift=['+strtrim(xchop+xnod,2)+','+strtrim(ychop+ynod,2)+']',priority='DEBUG',method='CreateImage'
-  plane4 = self->synthetic::CreateImage(shiftsource=[xchop+xnod,ychop+ynod])
+  plane4 = self->synthetic::CreateImage(shiftsource=[xchop+xnod,ychop+ynod],/dopsf)
   
   self->Message,'Observation mode is '+self.obsmode,priority='DEBUG',method='CreateImage'
   CASE strupcase(self.obsmode) of
@@ -138,7 +138,7 @@ FUNCTION synforcast::init, nodamp=nodamp, chopamp=chopamp, nodang=nodang, chopan
   if self.background gt 0. then begin
     auxarr = drip_imgnonlin(replicate(1.,self.dimx,self.dimy),*self.header,siglev=self.background)
     self.nlfactor = 1./auxarr[0,0]
-    self->Message,'Non linearity factor is '+strtrim(self.nlfactor,2)+' for background '+strtrim(self.background,2)
+    self->Message,'Non linearity factor is '+strtrim(self.nlfactor,2)+' for background '+strtrim(self.background,2),priority='INFO',method='INIT'
   endif
   
   self.chopamp = 30.
@@ -161,7 +161,7 @@ FUNCTION synforcast::init, nodamp=nodamp, chopamp=chopamp, nodang=nodang, chopan
       self.nodsys = float(sxpar(header,'NODCOORD'))
       
       self->Message,'Chop Amplitude: '+strtrim(self.chopamp,2)+' pixels, Nod Amplitude: '+strtrim(self.nodamp,2)+' pixels',priority='DEBUG',method='INIT'
-      self->Message,'Chop Angle: '+strtrim(self.chopang*180./!pi,2)+' degrees, Nod Angle: '+strtrim(self.nodang*180./!pi,2)+' degrees',priority='DEBUG',method='INIT'
+      self->Message,'Chop Angle: '+strtrim(self.chopang*180./!pi,2 )+' degrees, Nod Angle: '+strtrim(self.nodang*180./!pi,2 )+' degrees',priority='DEBUG',method='INIT'
     endif else begin
       self->Message,'File does not exist: '+ffits,priority='ERROR',method='INIT'
       return,0

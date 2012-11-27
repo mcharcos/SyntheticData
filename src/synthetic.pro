@@ -211,7 +211,8 @@ FUNCTION synthetic::CreateImage, fname=fname, header=header, $
   ;endelse
   
   if keyword_set(dopsf) then begin
-    if dopsf ne 1 then self->RefreshImage, _EXTRA=extraProperties, dopsf=dopsf
+    if dopsf ne 1 then self->RefreshImage, _EXTRA=extraProperties, dopsf=dopsf  $
+    else self->RefreshImage, _EXTRA=extraProperties
   endif else begin
     self->RefreshImage, _EXTRA=extraProperties
   endelse
@@ -219,12 +220,19 @@ FUNCTION synthetic::CreateImage, fname=fname, header=header, $
   ; First convolve the image with the psf
   imconv = *self.image 
   if keyword_set(dopsf) then begin
+    self->Message,'DOPSF is set',priority='DEBUG',method='CreateImage'
     if dopsf eq 1 then begin
+      self->Message,'     to 1',priority='DEBUG',method='CreateImage'
       if self.dispersion eq -1 then begin
+	self->Message,'DISPERSION is set to -1',priority='DEBUG',method='CreateImage'
 	if self.psf ne ptr_new() then begin
-          imconv = convolve(*self.image,*self.psf)
+	  self->Message,'PSF array is initialized',priority='DEBUG',method='CreateImage'
+	  imconv = convolve(*self.image,*self.psf)
 	endif else begin
-          psf = psf_Gaussian( NPIXEL=[self.dimx,self.dimy], FWHM=self.psffwhm, /NORMALIZE, NDIMEN=2)
+	  self->Message,'PSF array is empty',priority='DEBUG',method='CreateImage'
+	  self->Message,'Creating PSF array of width '+strtrim(self.psffwhm,2),priority='DEBUG',method='CreateImage'
+          self.psf = ptr_new(/allocate_heap)
+	  *self.psf = psf_Gaussian( NPIXEL=[self.dimx,self.dimy], FWHM=self.psffwhm, /NORMALIZE, NDIMEN=2)
 	  imconv = convolve(*self.image,*self.psf)
 	endelse
       endif else begin
@@ -254,9 +262,9 @@ FUNCTION synthetic::CreateImage, fname=fname, header=header, $
   endif
   
   ; Scale by the conversion factor. In the future we should add something here about the exposure time
+  self->Message,'Conversion factor is '+strtrim(self.conversion,2),priority='INFO',method='CreateImage'
   imconv = imconv/self.conversion
   sxaddpar,*self.header,'CONVFACT',self.conversion
-  
   
   ; Add flat fields, darks and badpixels
   ; we may want to verify the size of the images when read from a file
@@ -366,6 +374,7 @@ FUNCTION synthetic::CreateImage, fname=fname, header=header, $
   ;print,'MMMMMMMMMMMMMMMMMMMMMMMMMMMMM',mean((imres-imconv)^2/imconv),stddev((imres-imconv)^2/imconv)
   
   ; Now we add the non linearity effects due to the average counts of the image (=background)
+  self->Message,'Linearity Correction Factor is '+strtrim(self.nlfactor,2),priority='INFO',method='CreateImage'
   imres = imres*self.nlfactor
   
   ; Apply distortion correction
@@ -540,9 +549,10 @@ FUNCTION synthetic::init, dimx=dimx, dimy=dimy,snr=snr, psf=psf, background=back
   ;endif 
   if keyword_set(psf) then begin
     spsf = size(psf)
-    if s[0] eq 2 then self.psf = ptr_new(psf)
+    self->Message,'PSF was initialized in the input parameters.',priority='INFO',method='INIT'
+    if spsf[0] eq 2 then self.psf = ptr_new(psf)
   endif
-  if keyword_set(psffwhm) then self.psffwhm = psffwhm else self.psffwhm = 4.
+  if keyword_set(psffwhm) then self.psffwhm = psffwhm else self.psffwhm = 6.
   
   
   

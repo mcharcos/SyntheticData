@@ -94,7 +94,7 @@ function drip_imgnonlin, data, basehead, siglev=siglev
   ; We use Wavelength because filt2_s is a string
   ; filt_read=drip_getpar(basehead,'FILT2_S')
   filt_read=drip_getpar(basehead,'WAVELNTH')
-  if filt_read eq 'x' then begin
+  if strtrim(filt_read,2) eq 'x' then begin
     drip_message, 'WARNING: Wavelength is not defined in header (drip_imgnonlin)'
     drip_message, '         Linear correction is not applied'
     sxaddpar,header,'HISTORY','Image non-linearity was not corrected (Unknown WAVELENTH keyword)'
@@ -110,7 +110,7 @@ function drip_imgnonlin, data, basehead, siglev=siglev
   if (filt le 24.2) then camera = 'SWC' else camera='LWC'
   
   epadu_read=drip_getpar(basehead,'EPERADU')
-  if epadu_read eq 'x' then begin
+  if strtrim(epadu_read,2) eq 'x' then begin
     drip_message, 'WARNING: E/ADU is not defined in header (drip_imgnonlin)'    
     icap_read=drip_getpar(basehead,'ILOWCAP')
     if icap_read eq 'x' then begin
